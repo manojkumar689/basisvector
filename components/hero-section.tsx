@@ -1,255 +1,383 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { useState, useEffect, useCallback, useRef } from "react"
+import useEmblaCarousel from "embla-carousel-react"
 import Link from "next/link"
-import { ArrowRight, CheckCircle } from "lucide-react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
+import type { ReactNode } from "react"
 
-const rotatingWords = [
-  "Revenue Growth",
-  "Cost Efficiency",
-  "AI Transformation",
-  "Exit Readiness",
-  "EBITDA Expansion",
-]
+// ─── Slide Visuals ─────────────────────────────────────────────────────────────
 
-const hubNodes = [
-  { label: "GTM\nEngineering", x: 15, y: 18, color: "#3b82f6", delay: 0 },
-  { label: "Revenue\nEngine", x: 78, y: 12, color: "#06b6d4", delay: 0.3 },
-  { label: "AI\nAutomation", x: 88, y: 45, color: "#8b5cf6", delay: 0.6 },
-  { label: "Cost\nOptimization", x: 80, y: 78, color: "#10b981", delay: 0.9 },
-  { label: "Data Moat\nBuild", x: 18, y: 80, color: "#f59e0b", delay: 1.2 },
-  { label: "Exit\nNarrative", x: 8, y: 48, color: "#ec4899", delay: 1.5 },
-]
-
-function HubDiagram() {
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => { setMounted(true) }, [])
-
+function BenchmarkVisual() {
+  const bars = [
+    { label: "GTM Efficiency", pct: 38, val: "38%",     barColor: "#3b82f6", textColor: "#ef4444" },
+    { label: "Gross Margin",   pct: 52, val: "52%",     barColor: "#3b82f6", textColor: "#f97316" },
+    { label: "NRR",            pct: 89, val: "89%",     barColor: "#3b82f6", textColor: "#f97316" },
+    { label: "Data Moat",      pct: 15, val: "Low",     barColor: "#ef4444", textColor: "#ef4444" },
+    { label: "AI Integration", pct: 20, val: "Surface", barColor: "#ef4444", textColor: "#ef4444" },
+  ]
   return (
-    <div className="relative aspect-square w-full max-w-[520px] mx-auto">
-      {/* Outer rings */}
-      <div className="absolute inset-[15%] rounded-full border border-white/[0.04]" />
-      <div className="absolute inset-[30%] rounded-full border border-white/[0.06]" />
-      <div className="absolute inset-[42%] rounded-full border border-dashed border-primary/15" />
-
-      {/* Animated ring pulse */}
-      <motion.div
-        className="absolute inset-[30%] rounded-full border border-primary/10"
-        animate={{ scale: [1, 1.08, 1], opacity: [0.2, 0.5, 0.2] }}
-        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-      />
-
-      {/* Center hub */}
-      <div className="absolute inset-[38%] flex items-center justify-center">
-        <div className="relative flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-primary/5 backdrop-blur-sm border border-primary/20">
-          <div className="text-center px-2">
-            <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-primary/60">Operating System</p>
-            <p className="mt-1 text-sm font-bold text-white leading-tight">BVC<br/>Framework</p>
+    <div className="rounded-2xl border border-white/10 bg-[oklch(0.18_0.014_255_/_0.92)] p-6 shadow-xl backdrop-blur-md">
+      <p className="mb-5 text-[10px] font-bold uppercase tracking-[0.14em] text-[#7dc4f5]/60">
+        Diagnostic — Value Leakage Map
+      </p>
+      <div className="space-y-3.5">
+        {bars.map((b) => (
+          <div key={b.label} className="grid items-center gap-3" style={{ gridTemplateColumns: "7rem 1fr 3.5rem" }}>
+            <span className="text-xs text-white/55">{b.label}</span>
+            <div className="h-1.5 rounded-full bg-white/[0.07]">
+              <div className="h-full rounded-full transition-all" style={{ width: `${b.pct}%`, background: b.barColor }} />
+            </div>
+            <span className="text-right text-xs font-bold" style={{ color: b.textColor }}>{b.val}</span>
           </div>
-        </div>
-      </div>
-
-      {/* Connection lines + Nodes */}
-      {hubNodes.map((node) => (
-        <motion.div
-          key={node.label}
-          initial={{ opacity: 0, scale: 0.5 }}
-          animate={mounted ? { opacity: 1, scale: 1 } : {}}
-          transition={{ duration: 0.5, delay: node.delay + 0.3 }}
-          className="absolute"
-          style={{
-            left: `${node.x}%`,
-            top: `${node.y}%`,
-            transform: "translate(-50%, -50%)",
-          }}
-        >
-          {/* Glow */}
-          <div
-            className="absolute inset-0 rounded-xl blur-xl opacity-20"
-            style={{ background: node.color }}
-          />
-          {/* Card */}
-          <motion.div
-            animate={{ y: [0, -6, 0] }}
-            transition={{ duration: 4 + Math.random() * 2, repeat: Infinity, ease: "easeInOut", delay: node.delay }}
-            className="relative rounded-xl border border-white/[0.1] bg-[oklch(0.22_0.014_254_/_0.9)] px-3.5 py-2.5 backdrop-blur-md shadow-xl"
-          >
-            <div className="absolute -top-px left-3 right-3 h-px" style={{ background: `linear-gradient(90deg, transparent, ${node.color}, transparent)` }} />
-            <p className="whitespace-pre-line text-center text-[11px] font-semibold leading-tight text-white/80">
-              {node.label}
-            </p>
-          </motion.div>
-        </motion.div>
-      ))}
-
-      {/* Connecting lines via SVG */}
-      <svg className="absolute inset-0 h-full w-full pointer-events-none" viewBox="0 0 100 100">
-        {hubNodes.map((node) => (
-          <motion.line
-            key={node.label}
-            x1="50" y1="50"
-            x2={node.x} y2={node.y}
-            stroke={node.color}
-            strokeWidth="0.3"
-            strokeDasharray="2 2"
-            initial={{ pathLength: 0, opacity: 0 }}
-            animate={mounted ? { pathLength: 1, opacity: 0.3 } : {}}
-            transition={{ duration: 1, delay: node.delay + 0.1 }}
-          />
         ))}
-      </svg>
+      </div>
+      <div className="mt-5 rounded-lg border border-[#3b82f6]/20 bg-[#3b82f6]/[0.1] px-4 py-2.5 text-xs font-semibold text-[#7dc4f5]">
+        → 3 highest-leverage intervention points identified
+      </div>
     </div>
   )
 }
 
+function RebuildVisual() {
+  const engines = [
+    { icon: "📈", name: "Revenue Engine", kpi: "GTM · Pricing · Expansion",    tag: "CAC ↓  NRR ↑", tagColor: "#7dc4f5" },
+    { icon: "⚙️", name: "Cost Engine",    kpi: "Offshore · AI · Vendor",        tag: "Margin ↑",      tagColor: "#6de8a8" },
+    { icon: "🧩", name: "Product Engine", kpi: "AI-Native · Data · Retention",  tag: "Multiple ↑",    tagColor: "#c4a8f5" },
+  ]
+  return (
+    <div className="rounded-2xl border border-white/10 bg-[oklch(0.18_0.014_255_/_0.92)] p-6 shadow-xl backdrop-blur-md">
+      <p className="mb-5 text-[10px] font-bold uppercase tracking-[0.14em] text-[#6de8a8]/60">
+        Execution Engine — Layer 2
+      </p>
+      <div className="space-y-3">
+        {engines.map((e) => (
+          <div key={e.name} className="flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.03] p-3.5">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/[0.06] text-xl leading-none">
+              {e.icon}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-bold text-white/90">{e.name}</p>
+              <p className="mt-0.5 text-[11px] text-white/35">{e.kpi}</p>
+            </div>
+            <span className="shrink-0 text-xs font-bold" style={{ color: e.tagColor }}>{e.tag}</span>
+          </div>
+        ))}
+      </div>
+      <div className="mt-4 rounded-lg border border-[#1a9c57]/20 bg-[#1a9c57]/[0.1] px-4 py-2.5 text-xs font-semibold text-[#6de8a8]">
+        → All three run simultaneously — not sequentially
+      </div>
+    </div>
+  )
+}
+
+function CompoundVisual() {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-[oklch(0.18_0.014_255_/_0.92)] p-6 shadow-xl backdrop-blur-md">
+      <p className="mb-5 text-[10px] font-bold uppercase tracking-[0.14em] text-[#c4a8f5]/60">
+        Exit Valuation — Before vs. After
+      </p>
+      <div className="mb-5 space-y-3">
+        <div className="flex items-center gap-3">
+          <span className="w-10 shrink-0 text-xs text-white/40">Entry</span>
+          <div className="h-8 flex-1 overflow-hidden rounded-lg bg-white/[0.06]">
+            <div className="flex h-full w-[40%] items-center rounded-lg bg-white/15 px-3">
+              <span className="text-[10px] text-white/40">Pre-transform</span>
+            </div>
+          </div>
+          <span className="w-9 text-right text-sm font-bold text-white/35">3–4×</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="w-10 shrink-0 text-xs text-[#c4a8f5]">Exit</span>
+          <div className="h-8 flex-1 overflow-hidden rounded-lg bg-white/[0.06]">
+            <div
+              className="flex h-full w-[85%] items-center rounded-lg px-3"
+              style={{ background: "linear-gradient(90deg,rgba(108,68,201,.45),rgba(196,168,245,.35))" }}
+            >
+              <span className="text-[10px] text-white/65">AI-native, durable</span>
+            </div>
+          </div>
+          <span className="w-9 text-right text-sm font-bold text-[#c4a8f5]">7–9×</span>
+        </div>
+      </div>
+      <div className="space-y-2.5">
+        {[
+          "AI-native workflows → switching cost built in",
+          "Proprietary data moat → defensibility premium",
+          "NRR >110% → compounding equity story",
+        ].map((t) => (
+          <div key={t} className="flex items-center gap-2 text-[11px] text-white/50">
+            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#c4a8f5]" />
+            {t}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function ExitVisual() {
+  const items = [
+    { title: "Investor-Grade Data Room",     sub: "Audited financials, cohort data, LTV/CAC by segment" },
+    { title: "Buyer Narrative Construction", sub: "Strategic vs. financial framing — mapped to each buyer pool" },
+    { title: "Management Presentation",      sub: "MBR-ready deck and live-fire CEO/CFO coaching" },
+  ]
+  return (
+    <div className="rounded-2xl border border-white/10 bg-[oklch(0.18_0.014_255_/_0.92)] p-6 shadow-xl backdrop-blur-md">
+      <p className="mb-5 text-[10px] font-bold uppercase tracking-[0.14em] text-[#f5cc7d]/60">
+        Exit Readiness Checklist
+      </p>
+      <div className="space-y-3">
+        {items.map((item) => (
+          <div
+            key={item.title}
+            className="flex gap-3 rounded-xl border border-[#e6a032]/20 bg-[#e6a032]/[0.08] p-4"
+          >
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#e6a032]/20 text-sm font-bold text-[#f5cc7d]">
+              ✓
+            </div>
+            <div>
+              <p className="text-sm font-bold text-white/90">{item.title}</p>
+              <p className="mt-0.5 text-[11px] text-white/40">{item.sub}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-4 rounded-lg border border-[#e6a032]/20 bg-[#e6a032]/[0.1] px-4 py-2.5 text-xs font-semibold text-[#f5cc7d]">
+        → Multiple premium earned before the bank is hired
+      </div>
+    </div>
+  )
+}
+
+// ─── Slide definitions ────────────────────────────────────────────────────────
+
+interface SlideAction {
+  label: string
+  href: string
+  primary: boolean
+  bg?: string
+}
+
+interface Slide {
+  phase: string
+  accent: string
+  glow: string
+  h1: () => ReactNode
+  sub: string
+  actions: SlideAction[]
+  Visual: () => ReactNode
+}
+
+const slides: Slide[] = [
+  {
+    phase: "Benchmark",
+    accent: "#7dc4f5",
+    glow: "rgba(30,115,190,0.2)",
+    h1: () => (
+      <>
+        Benchmark to identify<br />
+        revenue, cost and<br />
+        <span style={{ color: "#7dc4f5" }}>product gaps.</span>
+      </>
+    ),
+    sub: "A structured six-dimension diagnostic maps value leakage across GTM efficiency, gross margin, NRR, AI adoption, data maturity, and product-market fit — pinpointing the highest-leverage intervention points before any change is made.",
+    actions: [
+      { label: "Explore the Framework", href: "/framework#diagnose", primary: true,  bg: "#2563eb" },
+      { label: "View Portfolio",         href: "/portfolio",          primary: false },
+    ],
+    Visual: BenchmarkVisual,
+  },
+  {
+    phase: "Rebuild",
+    accent: "#6de8a8",
+    glow: "rgba(26,156,87,0.2)",
+    h1: () => (
+      <>
+        Rebuild Revenue for<br />
+        <span style={{ color: "#6de8a8" }}>AI efficiency,</span> Product for<br />
+        outcomes, Cost with automation.
+      </>
+    ),
+    sub: "Three coordinated engines deployed simultaneously — Revenue rebuilt for AI-assisted GTM and pricing, Product rebuilt for measurable outcome delivery, Cost restructured through offshore leverage and deep automation.",
+    actions: [
+      { label: "Revenue Engine", href: "/modules/revenue-engine", primary: true,  bg: "#1a9c57" },
+      { label: "Cost Engine →",  href: "/modules/cost-engine",    primary: false },
+    ],
+    Visual: RebuildVisual,
+  },
+  {
+    phase: "Compound",
+    accent: "#c4a8f5",
+    glow: "rgba(108,68,201,0.2)",
+    h1: () => (
+      <>
+        Compound value with<br />
+        <span style={{ color: "#c4a8f5" }}>data</span> and workflow<br />
+        moats.
+      </>
+    ),
+    sub: "Proprietary data assets and AI-native workflows build compounding defensibility — raising NRR above 110%, deepening switching costs, and constructing the buyer narrative that commands a premium multiple at exit.",
+    actions: [
+      { label: "Compound Layer", href: "/framework#compound", primary: true,  bg: "#6c44c9" },
+      { label: "Case Studies →", href: "/case-studies",       primary: false },
+    ],
+    Visual: CompoundVisual,
+  },
+  {
+    phase: "Exit Readiness",
+    accent: "#f5cc7d",
+    glow: "rgba(230,160,50,0.2)",
+    h1: () => (
+      <>
+        Deliver exit readiness<br />
+        with clean governance,<br />
+        <span style={{ color: "#f5cc7d" }}>KPI</span> and EBITDA.
+      </>
+    ),
+    sub: "Investor-grade data room, auditable KPI dashboards, and clean EBITDA governance — built 12–18 months before process so diligence accelerates rather than derails, and the multiple is earned before the bank is hired.",
+    actions: [
+      { label: "Exit Readiness", href: "/framework#exit-readiness", primary: true,  bg: "#e6a032" },
+      { label: "Case Studies →", href: "/case-studies",             primary: false },
+    ],
+    Visual: ExitVisual,
+  },
+]
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
 export function HeroSection() {
-  const [wordIndex, setWordIndex] = useState(0)
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, duration: 28 })
+  const [current, setCurrent] = useState(0)
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const resetTimer = useCallback(() => {
+    if (timerRef.current) clearInterval(timerRef.current)
+    if (!emblaApi) return
+    timerRef.current = setInterval(() => emblaApi.scrollNext(), 5500)
+  }, [emblaApi])
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setWordIndex((prev) => (prev + 1) % rotatingWords.length)
-    }, 2800)
-    return () => clearInterval(interval)
-  }, [])
+    if (!emblaApi) return
+    emblaApi.on("select", () => setCurrent(emblaApi.selectedScrollSnap()))
+    resetTimer()
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current)
+    }
+  }, [emblaApi, resetTimer])
+
+  const prev = () => { emblaApi?.scrollPrev(); resetTimer() }
+  const next = () => { emblaApi?.scrollNext(); resetTimer() }
+  const goTo = (i: number) => { emblaApi?.scrollTo(i); resetTimer() }
 
   return (
-    <section className="relative min-h-screen overflow-hidden bg-background pt-24 pb-16 lg:pt-28 lg:pb-20">
-      {/* Background effects */}
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -right-60 -top-60 h-[800px] w-[800px] rounded-full bg-[radial-gradient(circle,oklch(0.62_0.19_235_/_0.06)_0%,transparent_60%)]" />
-        <div className="absolute -left-40 bottom-0 h-[600px] w-[600px] rounded-full bg-[radial-gradient(circle,oklch(0.62_0.19_235_/_0.04)_0%,transparent_60%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.012)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.012)_1px,transparent_1px)] bg-[size:72px_72px]" />
-        {/* Top gradient line */}
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
-      </div>
+    <section className="relative min-h-screen overflow-hidden bg-[oklch(0.21_0.014_255)] pt-20">
+      {/* Subtle grid */}
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.013)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.013)_1px,transparent_1px)] bg-[size:64px_64px]" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/25 to-transparent" />
 
-      <div className="relative mx-auto max-w-7xl px-4 lg:px-6">
-        <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-8">
-          {/* Left: copy */}
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.7 }}
-          >
-            <motion.span
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/[0.08] px-4 py-1.5 text-xs font-medium text-primary"
+      {/* Embla viewport */}
+      <div ref={emblaRef} className="overflow-hidden">
+        <div className="flex touch-pan-y">
+          {slides.map((slide, idx) => (
+            <div
+              key={idx}
+              className="relative min-w-full"
+              style={{
+                background: `radial-gradient(ellipse 65% 80% at 88% 42%, ${slide.glow} 0%, transparent 65%)`,
+              }}
             >
-              <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-              PE Operating Partner for SaaS
-            </motion.span>
+              <div className="mx-auto flex min-h-[calc(100vh-5rem)] max-w-7xl items-center px-4 py-16 lg:px-6 lg:py-24">
+                <div className="grid w-full items-center gap-12 lg:grid-cols-2 lg:gap-16">
 
-            <h1 className="mt-8 text-4xl font-bold leading-[1.08] tracking-tight text-white md:text-5xl lg:text-[3.5rem]">
-              Build Durable,
-              <br />
-              Profitable{" "}
-              <span className="relative inline-block">
-                <span className="bg-gradient-to-r from-primary via-blue-400 to-cyan-400 bg-clip-text text-transparent animate-gradient">
-                  SaaS
-                </span>
-              </span>{" "}
-              Businesses
-            </h1>
+                  {/* Left: text */}
+                  <div>
+                    <div
+                      className="mb-8 inline-flex items-center rounded-full border px-4 py-1.5 text-xs font-bold uppercase tracking-[0.14em]"
+                      style={{
+                        borderColor: `${slide.accent}35`,
+                        color: slide.accent,
+                        background: `${slide.accent}12`,
+                      }}
+                    >
+                      {slide.phase}
+                    </div>
 
-            {/* Rotating text */}
-            <div className="mt-6 flex items-center gap-3">
-              <span className="text-sm text-white/30 font-medium">Powered by</span>
-              <div className="relative h-7 overflow-hidden">
-                <AnimatePresence mode="wait">
-                  <motion.span
-                    key={wordIndex}
-                    initial={{ y: 28, opacity: 0, filter: "blur(4px)" }}
-                    animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
-                    exit={{ y: -28, opacity: 0, filter: "blur(4px)" }}
-                    transition={{ duration: 0.35, ease: "easeInOut" }}
-                    className="inline-block text-sm font-bold text-primary"
-                  >
-                    {rotatingWords[wordIndex]}
-                  </motion.span>
-                </AnimatePresence>
+                    <h1 className="text-4xl font-bold leading-[1.1] tracking-tight text-white md:text-5xl lg:text-[3.1rem]">
+                      {slide.h1()}
+                    </h1>
+
+                    <p className="mt-6 max-w-[490px] text-[15px] leading-relaxed text-white/48">
+                      {slide.sub}
+                    </p>
+
+                    <div className="mt-10 flex flex-wrap gap-3">
+                      {slide.actions.map((a) =>
+                        a.primary ? (
+                          <Link
+                            key={a.label}
+                            href={a.href}
+                            className="inline-flex items-center justify-center rounded-xl px-7 py-3.5 text-sm font-semibold text-white shadow-lg transition-all hover:brightness-110 hover:shadow-xl"
+                            style={{ background: a.bg ?? "#2563eb" }}
+                          >
+                            {a.label}
+                          </Link>
+                        ) : (
+                          <Link
+                            key={a.label}
+                            href={a.href}
+                            className="inline-flex items-center justify-center rounded-xl border border-white/12 bg-white/[0.04] px-7 py-3.5 text-sm font-semibold text-white/75 backdrop-blur-sm transition-all hover:bg-white/[0.08] hover:text-white"
+                          >
+                            {a.label}
+                          </Link>
+                        )
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Right: visual */}
+                  <div className="hidden lg:block">
+                    <slide.Visual />
+                  </div>
+                </div>
               </div>
             </div>
-
-            <p className="mt-6 max-w-md text-[15px] leading-relaxed text-white/40">
-              We acquire underperforming B2B software companies and transform them
-              with the BVC Framework -- our operator-led system for disciplined
-              growth and profitability.
-            </p>
-
-            <div className="mt-10 flex flex-col gap-3 sm:flex-row">
-              <Link
-                href="/framework"
-                className="group inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30 hover:brightness-110"
-              >
-                See How We Build Value
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-              </Link>
-              <Link
-                href="/portfolio"
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-7 py-3.5 text-sm font-semibold text-white/80 backdrop-blur-sm transition-all hover:bg-white/[0.06] hover:text-white"
-              >
-                View Portfolio
-              </Link>
-            </div>
-
-            {/* Trust badges */}
-            <div className="mt-12 flex flex-wrap items-center gap-4 text-[11px] text-white/25">
-              {["SOC 2 Type II", "Operational Excellence", "PE-Grade Governance"].map((badge) => (
-                <span key={badge} className="flex items-center gap-1.5">
-                  <CheckCircle className="h-3 w-3 text-primary/50" />
-                  {badge}
-                </span>
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Right: Hub Diagram */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
-            className="hidden lg:block"
-          >
-            <HubDiagram />
-          </motion.div>
+          ))}
         </div>
+      </div>
 
-        {/* Industry Solutions strip */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.6 }}
-          className="mt-20 lg:mt-24"
-        >
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/20 mb-5">
-            Industry Solutions
-          </p>
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            {[
-              { label: "Healthcare", sub: "EMR, HIE, HL7, Pharmacy" },
-              { label: "HR Tech", sub: "HRIS, Payroll, Benefits, ATS" },
-              { label: "eCommerce", sub: "EDI, Inventory, Orders, Retail" },
-              { label: "Enterprise AI", sub: "ML Ops, Data, Automation" },
-            ].map((item, i) => (
-              <motion.div
-                key={item.label}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.7 + i * 0.08 }}
-                className="group flex items-center gap-4 rounded-xl border border-white/[0.06] bg-white/[0.02] px-5 py-4 transition-all hover:border-primary/20 hover:bg-white/[0.04]"
-              >
-                <div>
-                  <p className="text-sm font-semibold text-white/80 group-hover:text-white transition-colors">{item.label}</p>
-                  <p className="text-[11px] text-white/25">{item.sub}</p>
-                </div>
-                <ArrowRight className="ml-auto h-3.5 w-3.5 text-white/15 group-hover:text-primary/50 transition-colors" />
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
+      {/* Prev arrow */}
+      <button
+        onClick={prev}
+        className="absolute left-4 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/10 bg-black/25 text-white/50 backdrop-blur-sm transition-all hover:bg-white/10 hover:text-white"
+        aria-label="Previous slide"
+      >
+        <ChevronLeft className="h-5 w-5" />
+      </button>
+
+      {/* Next arrow */}
+      <button
+        onClick={next}
+        className="absolute right-4 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/10 bg-black/25 text-white/50 backdrop-blur-sm transition-all hover:bg-white/10 hover:text-white"
+        aria-label="Next slide"
+      >
+        <ChevronRight className="h-5 w-5" />
+      </button>
+
+      {/* Dot navigation */}
+      <div className="absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2">
+        {slides.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => goTo(i)}
+            aria-label={`Go to slide ${i + 1}`}
+            className={`h-1.5 rounded-full transition-all duration-300 ${
+              i === current
+                ? "w-6 bg-white"
+                : "w-1.5 bg-white/25 hover:bg-white/50"
+            }`}
+          />
+        ))}
       </div>
     </section>
   )

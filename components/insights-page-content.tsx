@@ -1,109 +1,382 @@
 "use client"
 
-import { motion } from "framer-motion"
-import { useState } from "react"
-import { ArrowRight } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
+import Link from "next/link"
+import { Search, ArrowRight, Calendar, ChevronLeft, ChevronRight, RefreshCw, X } from "lucide-react"
+import { useWordPressPosts, useWordPressCategories } from "@/hooks/use-wordpress-posts"
+import {
+  getFeaturedImageUrl,
+  getPostCategories,
+  stripHtml,
+  formatDateShort,
+  type WPPost,
+} from "@/lib/wordpress"
 
-const categories = ["All", "Benchmark", "Rebuild", "Compound", "Exit Readiness"]
+// ─── Skeleton ─────────────────────────────────────────────────────────────────
 
-const articles = [
-  { layer: "Benchmark", sub: "GTM", title: "GTM Is Inefficient Not Broken", desc: "AI-powered workflow automation reclaims 40% of rep time, enabling AI-native GTM teams to operate 3x leaner." },
-  { layer: "Rebuild", sub: "Revenue", title: "Execution Matters More Than Strategy", desc: "AI-powered OKR tracking and execution monitoring create real-time accountability, turning strategy into measurable progress." },
-  { layer: "Rebuild", sub: "Revenue", title: "Lead Response Time Kills Conversion", desc: "AI-powered instant lead response and routing enable sub-minute response times 24/7, increasing conversion by 9x." },
-  { layer: "Rebuild", sub: "Revenue", title: "Pipeline Stages Lack Discipline", desc: "AI deal scoring and pipeline hygiene surface stuck deals and predict close probability with 85%+ accuracy." },
-  { layer: "Rebuild", sub: "Revenue", title: "Marketing and Sales Are Misaligned", desc: "AI-powered unified lead scoring and shared attribution align both teams on revenue signal." },
-  { layer: "Rebuild", sub: "Revenue", title: "No Structured Outbound Engine", desc: "AI sequencing and prospecting engines create scalable outbound that doesn't depend on individual rep talent." },
-  { layer: "Rebuild", sub: "Revenue", title: "Sales Cycles Are Unnecessarily Long", desc: "AI deal acceleration and proposal automation cut proposal time from days to hours." },
-  { layer: "Rebuild", sub: "Revenue", title: "No RevOps Function", desc: "AI-powered RevOps platforms provide automated data operations and unified revenue intelligence." },
-  { layer: "Benchmark", sub: "GTM", title: "GTM & Revenue Framework Article", desc: "Signal-led GTM tells you who is buying now. The difference is a different operating model." },
-  { layer: "Benchmark", sub: "GTM", title: "Five Whys of Sales Failure", desc: "Sales is weak is never the answer -- it is the starting point. The Five Whys drills through five structural layers." },
-  { layer: "Rebuild", sub: "Revenue", title: "Product-Sales Unity System", desc: "Product and sales operate as separate optimization functions. Closing that gap is a structural fix." },
-  { layer: "Rebuild", sub: "Revenue", title: "Distribution Memory", desc: "The most valuable GTM asset -- buyer relationships, channel partnerships, and institutional deal knowledge -- is rarely captured." },
-  { layer: "Rebuild", sub: "Pricing", title: "Pricing Is the Fastest EBITDA Lever", desc: "A 1% price increase drives 11% EBITDA improvement; AI identifies pricing power pockets without churning customers." },
-  { layer: "Rebuild", sub: "Pricing", title: "Packaging Drives Expansion Economics", desc: "AI analyzes product usage patterns to identify natural upsell triggers and optimal tier boundaries." },
-  { layer: "Rebuild", sub: "Pricing", title: "Discounts Are Unmanaged", desc: "AI deal desk tools enforce discount guardrails and optimize discount strategy, recovering 8-15% of discounted revenue." },
-  { layer: "Benchmark", sub: "Tech", title: "Product Overbuilt But Unfocused", desc: "AI usage analytics reveal the brutal truth: 60% of engineered features are rarely used." },
-  { layer: "Benchmark", sub: "Tech", title: "Technical Debt And Growth", desc: "Technical debt is now manageable via AI coding tools; the real question is data poverty." },
-  { layer: "Rebuild", sub: "Product", title: "Engineering Inefficiency", desc: "AI coding assistants increase individual output 30-55%; companies that deploy Copilot see 40% faster delivery." },
-  { layer: "Rebuild", sub: "AI & Auto", title: "AI For Productivity", desc: "AI-first engineering culture requires tooling strategy + team norms + measurement." },
-  { layer: "Rebuild", sub: "Offshore", title: "Offshore Execution Inconsistency", desc: "AI-powered project tracking eliminates blind spots in offshore delivery quality." },
-  { layer: "Rebuild", sub: "Offshore", title: "Cost Arbitrage Underutilization", desc: "AI coding assistants enable offshore teams to graduate from maintenance to architecture." },
-  { layer: "Rebuild", sub: "Vendor", title: "Vendor Sprawl", desc: "AI spend analytics platforms automatically discover, categorize, and rationalize SaaS spend." },
-  { layer: "Rebuild", sub: "Vendor", title: "Cloud Cost Control", desc: "AI FinOps platforms identify 25-40% infrastructure waste automatically." },
-  { layer: "Compound", sub: "CS & NRR", title: "Reactive Churn Management", desc: "AI churn models predict churn 90+ days out. Companies intervening at 90 days recover 35-40% of at-risk accounts." },
-  { layer: "Compound", sub: "Data & AI", title: "Data Moat Construction", desc: "Proprietary data assets create compounding defensibility and premium exit multiples." },
-  { layer: "Exit Readiness", sub: "Post-Acq", title: "First 100 Days", desc: "AI-powered diagnostic tools compress 60 days of discovery into 2 weeks." },
-  { layer: "Exit Readiness", sub: "Governance", title: "100-Day Plan Discipline", desc: "AI-powered planning tools transform static 100-day documents into living execution systems." },
-  { layer: "Rebuild", sub: "Execution", title: "Execution Bottleneck", desc: "AI-powered execution management creates cross-functional accountability infrastructure." },
-  { layer: "Rebuild", sub: "Org", title: "Skin-in-the-Game Test", desc: "Equity sacrifice reveals team commitment faster than any interview." },
-  { layer: "Rebuild", sub: "Cost", title: "Zero-Based Cost Reset (ZBCR)", desc: "The fastest way to cut costs is to rebuild the cost structure from zero. Every line re-earns its place." },
-]
+function PostSkeleton() {
+  return (
+    <div className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="h-48 w-full animate-pulse bg-slate-100" />
+      <div className="flex flex-col gap-3 p-5">
+        <div className="h-3 w-20 animate-pulse rounded-full bg-slate-100" />
+        <div className="h-5 w-full animate-pulse rounded bg-slate-100" />
+        <div className="h-4 w-5/6 animate-pulse rounded bg-slate-100" />
+        <div className="h-3 w-full animate-pulse rounded bg-slate-100" />
+        <div className="h-3 w-3/4 animate-pulse rounded bg-slate-100" />
+        <div className="mt-2 flex items-center justify-between">
+          <div className="h-3 w-24 animate-pulse rounded bg-slate-100" />
+          <div className="h-3 w-16 animate-pulse rounded bg-slate-100" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Post Card ────────────────────────────────────────────────────────────────
+
+function PostCard({ post, index }: { post: WPPost; index: number }) {
+  const image = getFeaturedImageUrl(post)
+  const cats = getPostCategories(post)
+  const category = cats[0]
+  const title = stripHtml(post.title.rendered)
+  const excerpt = stripHtml(post.excerpt.rendered).slice(0, 150)
+
+  return (
+    <motion.article
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, delay: Math.min(index * 0.05, 0.4) }}
+      className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:border-primary/30 hover:shadow-lg hover:-translate-y-1"
+    >
+      {/* Featured image */}
+      <Link href={`/insights/${post.slug}`} className="block overflow-hidden bg-slate-100">
+        {image ? (
+          <img
+            src={image}
+            alt={title}
+            loading="lazy"
+            className="h-48 w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        ) : (
+          <div className="flex h-48 w-full items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5">
+            <span className="text-4xl font-black text-primary/20">BVC</span>
+          </div>
+        )}
+      </Link>
+
+      {/* Body */}
+      <div className="flex flex-1 flex-col p-5">
+        {/* Category + date */}
+        <div className="flex items-center justify-between gap-2">
+          {category ? (
+            <span className="inline-flex items-center rounded-full bg-primary/[0.08] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
+              {category.name}
+            </span>
+          ) : (
+            <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              Insights
+            </span>
+          )}
+          <span className="flex items-center gap-1 text-[11px] text-slate-400">
+            <Calendar className="h-3 w-3" />
+            {formatDateShort(post.date)}
+          </span>
+        </div>
+
+        {/* Title */}
+        <Link href={`/insights/${post.slug}`}>
+          <h2 className="mt-3 line-clamp-2 text-[15px] font-bold leading-snug text-slate-900 transition-colors group-hover:text-primary">
+            {title}
+          </h2>
+        </Link>
+
+        {/* Excerpt */}
+        <p className="mt-2 flex-1 line-clamp-3 text-[13px] leading-relaxed text-slate-500">
+          {excerpt}{excerpt.length >= 150 ? "…" : ""}
+        </p>
+
+        {/* Read more */}
+        <Link
+          href={`/insights/${post.slug}`}
+          className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-primary opacity-0 transition-all duration-200 group-hover:opacity-100 group-hover:gap-2"
+        >
+          Read more <ArrowRight className="h-3.5 w-3.5" />
+        </Link>
+      </div>
+    </motion.article>
+  )
+}
+
+// ─── Pagination ───────────────────────────────────────────────────────────────
+
+function Pagination({
+  page,
+  totalPages,
+  onPageChange,
+}: {
+  page: number
+  totalPages: number
+  onPageChange: (p: number) => void
+}) {
+  if (totalPages <= 1) return null
+
+  const pages: (number | "…")[] = []
+  if (totalPages <= 7) {
+    for (let i = 1; i <= totalPages; i++) pages.push(i)
+  } else {
+    pages.push(1)
+    if (page > 3) pages.push("…")
+    for (let i = Math.max(2, page - 1); i <= Math.min(totalPages - 1, page + 1); i++) pages.push(i)
+    if (page < totalPages - 2) pages.push("…")
+    pages.push(totalPages)
+  }
+
+  return (
+    <div className="mt-12 flex items-center justify-center gap-2">
+      <button
+        onClick={() => onPageChange(page - 1)}
+        disabled={page === 1}
+        className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition-all hover:border-primary/30 hover:text-primary disabled:opacity-30 disabled:pointer-events-none"
+        aria-label="Previous page"
+      >
+        <ChevronLeft className="h-4 w-4" />
+      </button>
+
+      {pages.map((p, i) =>
+        p === "…" ? (
+          <span key={`ellipsis-${i}`} className="flex h-9 w-9 items-center justify-center text-slate-400 text-sm">
+            …
+          </span>
+        ) : (
+          <button
+            key={p}
+            onClick={() => onPageChange(p as number)}
+            className={`flex h-9 w-9 items-center justify-center rounded-lg border text-sm font-medium transition-all ${
+              p === page
+                ? "border-primary bg-primary text-white shadow-sm shadow-primary/20"
+                : "border-slate-200 text-slate-600 hover:border-primary/30 hover:text-primary"
+            }`}
+          >
+            {p}
+          </button>
+        ),
+      )}
+
+      <button
+        onClick={() => onPageChange(page + 1)}
+        disabled={page === totalPages}
+        className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition-all hover:border-primary/30 hover:text-primary disabled:opacity-30 disabled:pointer-events-none"
+        aria-label="Next page"
+      >
+        <ChevronRight className="h-4 w-4" />
+      </button>
+    </div>
+  )
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
 
 export function InsightsPageContent() {
-  const [activeCategory, setActiveCategory] = useState("All")
+  const {
+    posts, total, totalPages, page, setPage,
+    search, setSearch, categoryId, setCategoryId,
+    loading, error, refresh,
+  } = useWordPressPosts({ perPage: 9 })
 
-  const filtered = activeCategory === "All"
-    ? articles
-    : articles.filter((a) => a.layer === activeCategory)
+  const { categories } = useWordPressCategories()
+
+  const handleCategoryClick = (id: number) => {
+    setCategoryId(id === categoryId ? 0 : id)
+  }
+
+  const handlePageChange = (p: number) => {
+    setPage(p)
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  }
 
   return (
     <div>
-      {/* Hero */}
-      <section className="bg-[oklch(0.17_0.015_260)] pb-12 pt-32 lg:pb-16 lg:pt-44" data-dark-section>
+      {/* ── Hero (dark) ──────────────────────────────────────────────────────── */}
+      <section className="bg-[oklch(0.18_0.015_260)] pb-16 pt-32 lg:pb-20 lg:pt-44">
         <div className="mx-auto max-w-7xl px-4 lg:px-6">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <h1 className="text-4xl font-bold text-white md:text-5xl">BVC Insights</h1>
-            <p className="mt-4 max-w-3xl text-lg text-white/60">
-              {articles.length}+ articles organized around the BVC four-layer framework -- Benchmark, Rebuild, Compound, and Exit Readiness.
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55 }}
+          >
+            <span className="inline-flex items-center rounded-full border border-primary/20 bg-primary/[0.08] px-3.5 py-1 text-[10px] font-bold uppercase tracking-[0.15em] text-primary">
+              Research &amp; Insights
+            </span>
+            <h1 className="mt-5 text-4xl font-bold text-white md:text-5xl lg:text-6xl">
+              BVC Insights
+            </h1>
+            <p className="mt-4 max-w-2xl text-lg text-white/50">
+              Essays on value creation in PE-backed SaaS — GTM, Cost, Product,
+              Data, and the CFO layer.
             </p>
+          </motion.div>
+
+          {/* Search bar */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.15 }}
+            className="mt-8 max-w-lg"
+          >
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30" />
+              <input
+                type="search"
+                placeholder="Search insights…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full rounded-xl border border-white/10 bg-white/[0.07] py-3 pl-11 pr-10 text-sm text-white placeholder:text-white/30 backdrop-blur-sm transition-all focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/20"
+              />
+              {search && (
+                <button
+                  onClick={() => setSearch("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
           </motion.div>
         </div>
       </section>
 
-      {/* Filters + Articles */}
-      <section className="py-12 lg:py-16">
+      {/* ── Filter + Grid (light) ─────────────────────────────────────────────── */}
+      <section className="bg-slate-50 py-12 lg:py-16">
         <div className="mx-auto max-w-7xl px-4 lg:px-6">
-          {/* Category Filters */}
-          <div className="flex flex-wrap gap-2">
-            {categories.map((cat) => (
+
+          {/* Category pills */}
+          {categories.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.4, delay: 0.1 }}
+              className="flex flex-wrap gap-2"
+            >
               <button
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                className={`rounded-lg px-4 py-2 text-sm font-medium transition-all ${
-                  activeCategory === cat
-                    ? "bg-primary text-white"
-                    : "bg-secondary text-muted-foreground hover:text-foreground"
+                onClick={() => setCategoryId(0)}
+                className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-all ${
+                  categoryId === 0
+                    ? "border-primary bg-primary text-white shadow-sm shadow-primary/20"
+                    : "border-slate-200 bg-white text-slate-600 hover:border-primary/30 hover:text-primary"
                 }`}
               >
-                {cat}
+                All
               </button>
-            ))}
+              {categories.map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => handleCategoryClick(cat.id)}
+                  className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-all ${
+                    categoryId === cat.id
+                      ? "border-primary bg-primary text-white shadow-sm shadow-primary/20"
+                      : "border-slate-200 bg-white text-slate-600 hover:border-primary/30 hover:text-primary"
+                  }`}
+                >
+                  {cat.name}
+                  <span className="ml-1.5 text-[11px] opacity-60">({cat.count})</span>
+                </button>
+              ))}
+            </motion.div>
+          )}
+
+          {/* Results count */}
+          <div className="mt-6 flex items-center justify-between">
+            <p className="text-sm text-slate-500">
+              {loading ? (
+                <span className="animate-pulse">Loading…</span>
+              ) : error ? (
+                ""
+              ) : (
+                <>
+                  Showing{" "}
+                  <span className="font-semibold text-slate-700">
+                    {Math.min((page - 1) * 9 + 1, total)}–{Math.min(page * 9, total)}
+                  </span>{" "}
+                  of <span className="font-semibold text-slate-700">{total}</span> posts
+                  {search && (
+                    <> for <span className="font-semibold text-slate-700">&ldquo;{search}&rdquo;</span></>
+                  )}
+                </>
+              )}
+            </p>
           </div>
 
-          <p className="mt-6 text-sm text-muted-foreground">Showing {filtered.length} articles</p>
-
-          {/* Articles Grid */}
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((a, i) => (
-              <motion.div
-                key={`${a.title}-${i}`}
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: Math.min(i * 0.03, 0.3) }}
-                className="group cursor-pointer rounded-xl border border-border bg-white p-6 shadow-sm transition-all hover:border-primary/30 hover:shadow-md"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-medium text-primary">{a.layer}</span>
-                  <span className="text-[11px] text-muted-foreground">&middot; {a.sub}</span>
-                </div>
-                <h3 className="mt-3 text-sm font-bold text-foreground leading-snug">{a.title}</h3>
-                <p className="mt-2 text-xs text-muted-foreground line-clamp-3">{a.desc}</p>
-                <span className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
-                  Read <ArrowRight className="h-3 w-3" />
-                </span>
-              </motion.div>
-            ))}
+          {/* Grid */}
+          <div className="mt-8">
+            <AnimatePresence mode="wait">
+              {error ? (
+                <motion.div
+                  key="error"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex flex-col items-center gap-4 rounded-2xl border border-red-200 bg-red-50 p-12 text-center"
+                >
+                  <p className="text-red-600 font-medium">{error}</p>
+                  <button
+                    onClick={refresh}
+                    className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:brightness-110"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                    Try again
+                  </button>
+                </motion.div>
+              ) : loading ? (
+                <motion.div
+                  key="skeleton"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
+                >
+                  {Array.from({ length: 9 }).map((_, i) => (
+                    <PostSkeleton key={i} />
+                  ))}
+                </motion.div>
+              ) : posts.length === 0 ? (
+                <motion.div
+                  key="empty"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex flex-col items-center gap-3 rounded-2xl border border-slate-200 bg-white p-16 text-center"
+                >
+                  <Search className="h-8 w-8 text-slate-300" />
+                  <p className="font-medium text-slate-600">No posts found</p>
+                  <button
+                    onClick={() => { setSearch(""); setCategoryId(0) }}
+                    className="text-sm text-primary hover:brightness-110"
+                  >
+                    Clear filters
+                  </button>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key={`grid-${page}-${categoryId}-${search}`}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
+                >
+                  {posts.map((post, i) => (
+                    <PostCard key={post.id} post={post} index={i} />
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
+
+          {/* Pagination */}
+          {!loading && !error && (
+            <Pagination page={page} totalPages={totalPages} onPageChange={handlePageChange} />
+          )}
         </div>
       </section>
     </div>

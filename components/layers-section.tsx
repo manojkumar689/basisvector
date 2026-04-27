@@ -104,12 +104,6 @@ function StickyLayerCard({ layer, index }: { layer: (typeof layerSections)[0]; i
           {/* Left: text */}
           <div className="lg:w-2/5">
             <div className="flex items-center gap-3">
-              <span
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-xs font-bold"
-                style={{ background: `${layer.accent}20`, color: layer.accent }}
-              >
-                {layer.num}
-              </span>
               <span className="text-xs font-bold uppercase tracking-[0.15em]" style={{ color: layer.accent }}>
                 {layer.tag}
               </span>

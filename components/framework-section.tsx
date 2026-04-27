@@ -77,7 +77,7 @@ export function FrameworkSection() {
   const [hoveredLayer, setHoveredLayer] = useState<number | null>(null)
 
   return (
-    <section ref={ref} className="relative py-28 lg:py-36 bg-[oklch(0.16_0.014_255)]">
+    <section ref={ref} className="relative py-28 lg:py-36 bg-[oklch(0.21_0.014_255)]">
       {/* Subtle grid background */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:64px_64px]" />
@@ -129,42 +129,43 @@ export function FrameworkSection() {
                   transition={{ type: "spring", stiffness: 300 }}
                   className="relative cursor-pointer"
                 >
-                  {/* Glow */}
                   <div
-                    className="absolute -inset-3 rounded-full blur-xl transition-opacity duration-500"
+                    className="relative flex h-14 w-14 items-center justify-center rounded-full border-2 transition-all duration-300"
                     style={{
-                      background: layer.accent,
-                      opacity: hoveredLayer === i ? 0.25 : 0.08,
-                    }}
-                  />
-                  <div
-                    className="relative flex h-16 w-16 items-center justify-center rounded-2xl border-2 transition-all duration-300"
-                    style={{
-                      borderColor: hoveredLayer === i ? layer.accent : `${layer.accent}40`,
-                      background: `${layer.accent}${hoveredLayer === i ? "25" : "10"}`,
+                      borderColor: hoveredLayer === i ? layer.accent : `${layer.accent}35`,
+                      background: "rgb(20 25 31)",
                     }}
                   >
-                    <layer.icon className="h-6 w-6" style={{ color: layer.accent }} />
+                    <layer.icon className="h-6 w-6 transition-colors duration-300" style={{ color: layer.accent }} />
                   </div>
                 </motion.div>
                 <span
                   className="mt-3 text-[11px] font-bold uppercase tracking-[0.12em] transition-colors duration-300"
                   style={{ color: hoveredLayer === i ? layer.accent : `${layer.accent}80` }}
                 >
-                  L{layer.num}
+                  {layer.tag}
                 </span>
-                <span className="mt-0.5 text-[10px] text-white/40">{layer.tag}</span>
               </motion.div>
             ))}
           </div>
-          {/* Connecting line */}
-          <div className="absolute top-8 left-[15%] right-[15%] h-px bg-gradient-to-r from-blue-500/30 via-cyan-500/30 via-violet-500/30 to-amber-500/30" />
-          <motion.div
-            initial={{ scaleX: 0 }}
-            animate={isInView ? { scaleX: 1 } : {}}
-            transition={{ duration: 1.5, delay: 0.8, ease: "easeOut" }}
-            className="absolute top-8 left-[15%] right-[15%] h-px origin-left bg-gradient-to-r from-blue-500/60 via-cyan-500/60 via-violet-500/60 to-amber-500/60"
-          />
+          {/* Dashed connecting line */}
+          <div className="absolute left-[18%] right-[18%]" style={{ top: "27px" }}>
+            {/* Static grey baseline dashes */}
+            <div
+              className="absolute inset-x-0 top-0 h-0"
+              style={{ borderTopWidth: "2px", borderTopStyle: "dashed", borderTopColor: "rgba(255,255,255,0.07)" }}
+            />
+            {/* Animated coloured dashes — reveals left to right */}
+            <div className="absolute inset-x-0 top-0 overflow-hidden">
+              <motion.div
+                className="h-0"
+                style={{ borderTopWidth: "2px", borderTopStyle: "dashed", borderTopColor: "rgba(99,102,241,0.55)" }}
+                initial={{ width: 0 }}
+                animate={isInView ? { width: "100%" } : {}}
+                transition={{ duration: 2, delay: 0.7, ease: [0.16, 1, 0.3, 1] }}
+              />
+            </div>
+          </div>
         </div>
 
         {/* Layer Cards - Bento grid layout */}
@@ -201,10 +202,6 @@ export function FrameworkSection() {
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-[11px] font-bold" style={{ color: layer.accent }}>
-                          L{layer.num}
-                        </span>
-                        <span className="text-[10px] text-white/25">|</span>
                         <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: `${layer.accent}cc` }}>
                           {layer.tag}
                         </span>
@@ -246,11 +243,11 @@ export function FrameworkSection() {
                   <div className="mt-4 grid gap-2 sm:grid-cols-3">
                     {layer.subItems.map((group, gi) => (
                       <div key={gi} className="rounded-lg border border-white/[0.04] bg-white/[0.02] p-3">
-                        <p className="text-[10px] font-bold text-white/50 uppercase tracking-wider mb-1.5">
+                        <p className="text-[13px] font-bold text-white/50 uppercase tracking-wider mb-1.5">
                           {layer.items[gi]}
                         </p>
                         {group.map((sub) => (
-                          <p key={sub} className="text-[10px] text-white/30 leading-relaxed">{sub}</p>
+                          <p key={sub} className="text-[13px] text-white/30 leading-relaxed">{sub}</p>
                         ))}
                       </div>
                     ))}
